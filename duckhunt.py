@@ -2,6 +2,7 @@ import dns.resolver
 import socket
 import argparse
 import sys
+import whois
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--domain', type=str, help='domain')
 def get_soa_record(domain):
@@ -24,6 +25,14 @@ def check_authoritative_response(domain, primary_ns):
     except Exception as e:
         return str(e)
 
+def get_whoisdata(domain):
+    try:
+        domain_info = whois.query(domain)
+        nameservers = domain_info.name_servers
+        return nameservers
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 args = parser.parse_args()
 
 if args.domain is None:
@@ -37,4 +46,9 @@ if primary_ns:
     is_authoritative = check_authoritative_response(domain, primary_ns)
     print(f"Domain:{domain}; Primary:{primary_ns}; AA: {is_authoritative}")
 else:
-    print(f"Error retrieving SOA record: {soa_record}")
+    is_authoritative =False
+
+
+if not is_authoritative:
+    whois_nameservers = get_whoisdata(domain)
+    print(f"Domain:{domain}; Whois NSes: {whois_nameservers}")
